@@ -226,7 +226,11 @@ export function useMonitors() {
   }
 
   function parseUptimeRanges(ranges?: string): (number | null)[] {
-    if (!ranges) return Array(30).fill(null)
+    if (!ranges) {
+      const arr = Array(30).fill(null)
+      arr[29] = 100
+      return arr
+    }
     return ranges.split('-').map(v => {
       const num = parseFloat(v)
       return isNaN(num) ? null : Math.round(num * 10) / 10

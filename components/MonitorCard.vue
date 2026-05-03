@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between gap-4">
       <div class="flex items-center gap-3 min-w-0">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+        <h2 class="text-lg sm:text-xl font-bold truncate text-gray-800 dark:text-gray-100">
           {{ monitor.friendly_name }}
         </h2>
 
@@ -16,7 +16,7 @@
           <span class="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" :class="dotClass"></span>
           <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="dotClass"></span>
         </span>
-        <span>{{ statusText }}</span>
+        <span class="text-gray-900 dark:text-white">{{ statusText }}</span>
       </div>
     </div>
 
@@ -61,8 +61,6 @@
         <span class="text-sm text-gray-600 dark:text-gray-300">
           {{ monitorTypeText }} / {{ monitorInterval }}m
         </span>
-        <span class="text-gray-300 dark:text-gray-600">·</span>
-        <span class="text-sm font-medium" :class="statusColorClass">{{ statusText }}</span>
       </div>
 
       <!-- Day bars -->
@@ -196,6 +194,12 @@ const formatResponseTime = computed(() => {
 const uptimeDays = computed(() => {
   const daily = props.monitor.dailyUptimes
   if (!daily || !daily.length) return []
+  const hasData = daily.some(d => d !== null)
+  if (!hasData) {
+    const arr = [...daily]
+    arr[arr.length - 1] = 100
+    return arr
+  }
   return daily
 })
 
@@ -211,6 +215,10 @@ const monitorInterval = computed(() => {
 const displayUptimeDays = computed(() => {
   const days = uptimeDays.value
   if (!days.length) return Array(30).fill(null)
+
+  const padded: (number | null)[] = days.length >= 30
+    ? days.slice(-30)
+    : [...Array(30 - days.length).fill(null), ...days]
 
   const now = new Date()
   const shanghaiDateStr = now.toLocaleString('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -232,9 +240,9 @@ const displayUptimeDays = computed(() => {
     }
   }
 
-  return days.map((d, i) => {
+  return padded.map((d, i) => {
     if (d === null) return null
-    const isToday = i === days.length - 1
+    const isToday = i === padded.length - 1
     const offlinePct = Math.round((100 - d) * 10) / 10
     if (isToday && todaySegments.length > 0) {
       return { offlinePct: 0, segments: todaySegments }
