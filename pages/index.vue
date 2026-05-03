@@ -1,53 +1,66 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-    <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
-      <AppHeader 
-        :countdown="countdown"
-        :formatted-countdown="formattedCountdown"
-        :on-refresh="manualRefresh"
+  <AppHeader 
+    :countdown="countdown"
+    :formatted-countdown="formattedCountdown"
+    :on-refresh="manualRefresh"
+  />
+  
+  <Loading :is-loading="isLoading" />
+  <Error :error="error" />
+
+  <template v-if="!isLoading && monitors.length">
+    <Stats :stats="stats" />
+
+    <StatusBar 
+      :all-online="overallStatus.allOnline"
+      :has-offline="overallStatus.hasOffline"
+      :has-paused="overallStatus.hasPaused"
+      :average-uptime="averageUptime"
+      :running-days="runningDays"
+    />
+
+    <!-- Monitor List -->
+    <div v-if="monitors.length" class="space-y-4">
+      <MonitorCard 
+        v-for="monitor in monitors" 
+        :key="monitor.id" 
+        :monitor="monitor"
       />
-      
-      <Loading :is-loading="isLoading" :monitors="monitors" />
-      <Error :error="error" />
-
-      <template v-if="!isLoading && monitors.length">
-        <Stats 
-          :monitors="monitors" 
-          :online-count="onlineCount"
-          :paused-count="pausedCount"
-          :offline-count="offlineCount"
-        />
-
-        <StatusBar :monitors="monitors" />
-
-        <MonitorList :monitors="monitors" />
-      </template>
-      
-      <AppFooter :last-update="lastUpdate" />
     </div>
-  </div>
+  </template>
+
+  <AppFooter />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { useMonitors } from '~/composables/useMonitors'
 
+// 设置页面元数据
+useHead({
+  title: '服务状态监控',
+  meta: [
+    { name: 'description', content: 'UptimeStatusPage - 服务状态监控面板' }
+  ]
+})
+
+// 使用监控数据 composable
 const { 
   monitors, 
   error, 
-  lastUpdate, 
   isLoading,
   countdown,
   formattedCountdown,
-  onlineCount, 
-  pausedCount, 
-  offlineCount, 
+  stats,
+  overallStatus,
+  averageUptime,
+  runningDays,
   fetchData,
   manualRefresh,
   isFromCache,
   cleanup
 } = useMonitors()
 
+// 生命周期钩子
 onMounted(() => {
   if (!isFromCache) fetchData()
 })

@@ -17,9 +17,16 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: '服务状态监控面板' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
       ]
     }
   },
+
+  css: [
+    '~/assets/css/components.css'
+  ],
 
   runtimeConfig: {
     public: {
@@ -34,5 +41,24 @@ export default defineNuxtConfig({
       tailwindcss: {},
       autoprefixer: {}
     }
+  },
+
+  // 优化：组件自动导入
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false
+    }
+  ],
+
+  // 构建优化
+  build: {
+    transpile: ['@iconify/vue']
+  },
+
+  // TypeScript 配置
+  typescript: {
+    strict: true,
+    typeCheck: true
   }
 })

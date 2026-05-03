@@ -1,3 +1,5 @@
+import type { ApiResponse, ApiMonitor } from '~/types'
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const body = await readBody(event)
@@ -11,14 +13,15 @@ export default defineEventHandler(async (event) => {
   })
 
   try {
-    const response = await $fetch('https://api.uptimerobot.com/v2/getMonitors', {
+    const response = await $fetch<ApiResponse>('https://api.uptimerobot.com/v2/getMonitors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString()
     })
+    
     if (response?.monitors) {
-      response.monitors = response.monitors.map((m: any) => {
-        const { url, ...rest } = m
+      response.monitors = response.monitors.map((m: ApiMonitor) => {
+        const { url: _url, ...rest } = m
         return rest
       })
     }
