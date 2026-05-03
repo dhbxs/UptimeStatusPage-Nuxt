@@ -26,7 +26,7 @@
 
 ## 截图
 
-![仪表盘截图](screenshot.png)
+![仪表盘截图](docs/preview.png)
 
 ## 开始使用
 

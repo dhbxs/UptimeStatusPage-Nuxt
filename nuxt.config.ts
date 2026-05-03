@@ -1,13 +1,15 @@
+import { version } from './package.json'
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  
+
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/color-mode'],
-  
+
   colorMode: {
     classSuffix: '',
     storageKey: 'theme'
   },
-  
+
   app: {
     head: {
       title: '状态监控',
@@ -18,11 +20,19 @@ export default defineNuxtConfig({
       ]
     }
   },
-  
+
   runtimeConfig: {
     public: {
       apiUrl: '',
-      apiKey: ''
+      apiKey: '',
+      version
+    }
+  },
+
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {}
     }
   }
 })

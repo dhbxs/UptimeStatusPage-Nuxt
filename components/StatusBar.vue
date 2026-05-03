@@ -58,14 +58,16 @@ const progressColorClass = computed(() => {
 const uptimePercent = computed(() => {
   if (!props.monitors.length) return 100
   const total = props.monitors.reduce((sum, m) => sum + (parseFloat(m.uptime) || 0), 0)
-  return Math.round(total / props.monitors.length * 10) / 10
+  return Math.round(total / props.monitors.length)
 })
 
 const runningDaysText = computed(() => {
   if (!props.monitors.length) return ''
   const minCreateTime = Math.min(...props.monitors.map(m => m.create_datetime).filter(Boolean))
   if (!minCreateTime) return ''
-  const days = Math.floor((Date.now() - minCreateTime * 1000) / (1000 * 60 * 60 * 24))
+  const createDay = Math.floor((minCreateTime + 28800) / 86400)
+  const nowDay = Math.floor((Date.now() / 1000 + 28800) / 86400)
+  const days = nowDay - createDay + 1
   return `已运行 ${days} 天`
 })
 </script>

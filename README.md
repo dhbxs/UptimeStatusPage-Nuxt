@@ -26,7 +26,7 @@ A beautiful, real-time service status dashboard powered by [UptimeRobot](https:/
 
 ## Screenshot
 
-![Dashboard Screenshot](screenshot.png)
+![Dashboard Screenshot](docs/preview.png)
 
 ## Setup
 

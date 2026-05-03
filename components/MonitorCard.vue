@@ -1,7 +1,6 @@
 <template>
   <div 
-    class="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 cursor-pointer"
-    :class="cardHoverClass"
+    class="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-500/50"
   >
     <!-- Header -->
     <div class="flex items-center justify-between gap-4">
@@ -9,11 +8,7 @@
         <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
           {{ monitor.friendly_name }}
         </h2>
-        <a :href="getUrl(monitor.url)" target="_blank" class="flex-shrink-0 p-1.5 rounded-full bg-gray-50 hover:bg-gray-200 dark:bg-gray-700/40 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        </a>
+
       </div>
       
       <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium" :class="badgeClass">
@@ -43,7 +38,7 @@
       <div class="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 relative">
         <div class="text-xs text-gray-500 dark:text-gray-400">平均运行时间</div>
         <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-          {{ monitor.uptime }}%
+          {{ monitor.uptime || '100' }}%
         </div>
         <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">最近30天</div>
         <!-- Clock icon -->
@@ -71,19 +66,32 @@
       </div>
 
       <!-- Day bars -->
-      <div class="flex gap-[3px] h-6 items-end">
+      <div class="flex gap-[3px] h-8">
         <div
-          v-for="(day, index) in displayUptimeDays"
+          v-for="(item, index) in displayUptimeDays"
           :key="index"
-          class="flex-1 rounded-md transition-colors duration-200"
+          class="flex-1 rounded-md overflow-hidden relative"
           :class="{
-            'bg-emerald-400 dark:bg-emerald-500': day === true,
-            'bg-red-400 dark:bg-red-500': day === false,
-            'bg-gray-100 dark:bg-gray-700': day === null
+            'bg-gray-100 dark:bg-gray-700': item === null
           }"
-          :style="{ height: '100%' }"
-          :title="day === true ? '在线' : day === false ? '离线' : '暂无数据'"
-        ></div>
+        >
+          <template v-if="item !== null">
+            <div class="w-full h-full bg-emerald-400 dark:bg-emerald-500"></div>
+            <template v-if="item.segments">
+              <div
+                v-for="(seg, si) in item.segments"
+                :key="si"
+                class="absolute left-0 right-0 bg-red-400 dark:bg-red-500"
+                :style="{ top: `${seg.top}%`, height: `${seg.height}%` }"
+              ></div>
+            </template>
+            <div
+              v-else-if="item.offlinePct > 0"
+              class="absolute top-0 left-0 right-0 bg-red-400 dark:bg-red-500"
+              :style="{ height: `${item.offlinePct}%` }"
+            ></div>
+          </template>
+        </div>
       </div>
 
       <!-- Labels -->
@@ -123,13 +131,21 @@
                 <div
                   v-for="(log, index) in incidentLogs"
                   :key="index"
-                  class="flex items-center justify-between py-2 px-3 rounded-lg bg-white dark:bg-gray-700 shadow-sm"
+                  class="py-2 px-3 rounded-lg bg-white dark:bg-gray-700 shadow-sm"
                 >
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">离线</span>
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-start gap-2 min-w-0">
+                      <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-1.5"></span>
+                      <div class="min-w-0">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ getLogStatusText(log.type) }}</span>
+                        <span v-if="log.reason?.detail" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ log.reason.detail }}</span>
+                      </div>
+                    </div>
+                    <div class="flex-shrink-0 text-right">
+                      <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ formatLogDate(log.datetime) }}</span>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 block mt-0.5">持续 {{ formatDuration(log.duration) }}</span>
+                    </div>
                   </div>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatLogDate(log.datetime) }}</span>
                 </div>
               </div>
               <div v-else class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
@@ -143,8 +159,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
+import { LogType, type MonitorLog } from '~/composables/useMonitors'
 
 const props = defineProps({
   monitor: { 
@@ -156,32 +173,18 @@ const props = defineProps({
 const isExpanded = ref(false)
 
 const statusText = computed(() => {
-  const map = { 2: '在线', 0: '暂停', 1: '准备中', 9: '离线' }
+  const map: Record<number, string> = { 2: '在线', 0: '暂停', 1: '准备中', 8: '疑似下线', 9: '离线' }
   return map[props.monitor.status] || '未知'
 })
 
 const dotClass = computed(() => {
-  const map = { 2: 'bg-emerald-500', 0: 'bg-yellow-500', 1: 'bg-yellow-500', 9: 'bg-red-500' }
+  const map: Record<number, string> = { 2: 'bg-emerald-500', 0: 'bg-yellow-500', 1: 'bg-yellow-500', 8: 'bg-red-500', 9: 'bg-red-500' }
   return map[props.monitor.status] || 'bg-gray-500'
 })
 
 const statusColorClass = computed(() => {
-  const map = { 2: 'text-emerald-500', 0: 'text-yellow-500', 1: 'text-yellow-500', 9: 'text-red-500' }
+  const map: Record<number, string> = { 2: 'text-emerald-500', 0: 'text-yellow-500', 1: 'text-yellow-500', 8: 'text-red-500', 9: 'text-red-500' }
   return map[props.monitor.status] || 'text-gray-500'
-})
-
-const cardHoverClass = computed(() => {
-  return 'hover:border-emerald-300 dark:hover:border-emerald-500/50'
-})
-
-const badgeClass = computed(() => {
-  const map = { 
-    2: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
-    0: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/15 dark:text-yellow-400',
-    1: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/15 dark:text-yellow-400',
-    9: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400'
-  }
-  return map[props.monitor.status] || 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
 })
 
 const formatResponseTime = computed(() => {
@@ -191,38 +194,13 @@ const formatResponseTime = computed(() => {
 })
 
 const uptimeDays = computed(() => {
-  if (!props.monitor.create_datetime) return []
-  
-  const now = Date.now()
-  const createTime = props.monitor.create_datetime * 1000
-  const daysSinceCreation = Math.floor((now - createTime) / (24 * 60 * 60 * 1000))
-  const actualDays = Math.min(daysSinceCreation, 30)
-  
-  if (actualDays <= 0) return []
-  
-  const days = Array(actualDays).fill(true)
-  
-  if (props.monitor.logs) {
-    for (const log of props.monitor.logs) {
-      const logTime = log.datetime * 1000
-      if (logTime >= createTime && logTime <= now) {
-        const dayIndex = Math.floor((logTime - createTime) / (24 * 60 * 60 * 1000))
-        if (dayIndex >= 0 && dayIndex < actualDays) {
-          if (log.type === 9) {
-            days[dayIndex] = false
-          } else if (log.type === 2 && days[dayIndex]) {
-            days[dayIndex] = true
-          }
-        }
-      }
-    }
-  }
-  
-  return days
+  const daily = props.monitor.dailyUptimes
+  if (!daily || !daily.length) return []
+  return daily
 })
 
 const monitorTypeText = computed(() => {
-  const map = { 1: 'HTTP', 2: 'Keyword', 3: 'PING', 4: 'Port' }
+  const map: Record<number, string> = { 1: 'HTTP', 2: 'Keyword', 3: 'PING', 4: 'Port', 5: 'Cron Job', 6: 'API' }
   return map[props.monitor.type] || 'Unknown'
 })
 
@@ -232,41 +210,86 @@ const monitorInterval = computed(() => {
 
 const displayUptimeDays = computed(() => {
   const days = uptimeDays.value
-  if (days.length >= 30) return days.slice(-30)
-  // Pad with null (no data) for days before creation to always show 30 bars
-  const padded = Array(30 - days.length).fill(null)
-  return [...padded, ...days]
+  if (!days.length) return Array(30).fill(null)
+
+  const now = new Date()
+  const shanghaiDateStr = now.toLocaleString('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' })
+  const todayStartTs = Math.floor(new Date(`${shanghaiDateStr}T00:00:00+08:00`).getTime() / 1000)
+  const nowTs = Math.floor(Date.now() / 1000)
+  const DAY_SEC = 86400
+
+  // Build today's fault segments from logs (scaled to 24h)
+  const todaySegments: { top: number; height: number }[] = []
+  if (props.monitor.logs) {
+    for (const log of props.monitor.logs) {
+      if (log.type !== LogType.DOWN) continue
+      const segStart = Math.max(log.datetime, todayStartTs)
+      const segEnd = Math.min(log.datetime + log.duration, nowTs)
+      if (segEnd <= segStart) continue
+      const top = Math.round((86400 - (segEnd - todayStartTs)) / DAY_SEC * 1000) / 10
+      const hgt = Math.round((segEnd - segStart) / DAY_SEC * 1000) / 10
+      todaySegments.push({ top: Math.max(0, top), height: Math.min(100 - top, hgt) })
+    }
+  }
+
+  return days.map((d, i) => {
+    if (d === null) return null
+    const isToday = i === days.length - 1
+    const offlinePct = Math.round((100 - d) * 10) / 10
+    if (isToday && todaySegments.length > 0) {
+      return { offlinePct: 0, segments: todaySegments }
+    }
+    return { offlinePct, segments: undefined }
+  })
 })
 
 const uptimeSummaryText = computed(() => {
   const days = uptimeDays.value
   if (!days.length) return '暂无数据'
-  const offlineCount = days.filter(d => !d).length
-  if (offlineCount === 0) return `最近${days.length}天运行正常`
-  return `最近${days.length}天有 ${offlineCount} 天离线`
+  const validDays = days.filter(d => d !== null) as number[]
+  if (!validDays.length) return '暂无数据'
+  const offlineCount = validDays.filter(d => d < 100).length
+  if (offlineCount === 0) return `最近${validDays.length}天运行正常`
+  return `最近${validDays.length}天有 ${offlineCount} 天离线`
 })
 
 const incidentLogs = computed(() => {
   if (!props.monitor.logs) return []
-  return props.monitor.logs.filter(log => log.type === 9).slice(0, 10)
+  return props.monitor.logs.filter((log: MonitorLog) => log.type === LogType.DOWN).slice(0, 10)
 })
 
 function toggleExpand() {
   isExpanded.value = !isExpanded.value
 }
 
-function getUrl(url) {
-  if (!url) return '#'
-  return url.startsWith('http') ? url : `http://${url}`
+function getLogStatusText(type: number) {
+  const map: Record<number, string> = {
+    1: '服务离线',
+    98: '监控启动',
+    99: '服务暂停'
+  }
+  return map[type] || '未知状态'
 }
 
-function formatLogDate(timestamp) {
+function formatDuration(seconds: number) {
+  if (!seconds || seconds <= 0) return '< 1秒'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (h > 0) return `${h}小时${m}分钟`
+  if (m > 0) return `${m}分钟${s}秒`
+  return `${s}秒`
+}
+
+
+function formatLogDate(timestamp: number) {
   const date = new Date(timestamp * 1000)
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hour}:${minute}`
 }
 </script>
+

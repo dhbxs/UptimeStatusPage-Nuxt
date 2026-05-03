@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading && !monitors.length" class="space-y-4 animate-pulse">
+  <div v-if="isLoading" class="space-y-4 animate-pulse">
     <!-- Stats Skeleton -->
     <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700 h-24">

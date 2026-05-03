@@ -10,7 +10,7 @@
       <Loading :is-loading="isLoading" :monitors="monitors" />
       <Error :error="error" />
 
-      <template v-if="monitors.length">
+      <template v-if="!isLoading && monitors.length">
         <Stats 
           :monitors="monitors" 
           :online-count="onlineCount"
@@ -43,17 +43,16 @@ const {
   pausedCount, 
   offlineCount, 
   fetchData,
-  manualRefresh
+  manualRefresh,
+  isFromCache,
+  cleanup
 } = useMonitors()
 
-let refreshInterval
-
 onMounted(() => {
-  fetchData()
-  refreshInterval = setInterval(fetchData, 300000)
+  if (!isFromCache) fetchData()
 })
 
 onUnmounted(() => {
-  if (refreshInterval) clearInterval(refreshInterval)
+  cleanup()
 })
 </script>
