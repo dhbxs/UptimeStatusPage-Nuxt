@@ -100,6 +100,10 @@ uptime-nuxt/
 └── nuxt.config.ts       # Nuxt configuration
 ```
 
+## Acknowledgments
+
+UI design inspired by [Uptime-Status](https://github.com/JLinMr/Uptime-Status).
+
 ## License
 
 [Apache License](LICENSE)
