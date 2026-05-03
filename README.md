@@ -1,6 +1,6 @@
 # Uptime Monitor
 
-A beautiful, real-time service status dashboard powered by [UptimeRobot](https://uptimerobot.com/). Built with Nuxt 3 and Tailwind CSS.
+A beautiful, real-time service status dashboard powered by [UptimeRobot](https://uptimerobot.com/). Built with Nuxt 4 and Tailwind CSS 3.
 
 [中文文档](README_zh.md)
 
@@ -18,11 +18,11 @@ A beautiful, real-time service status dashboard powered by [UptimeRobot](https:/
 
 ## Tech Stack
 
-- [Nuxt 3](https://nuxt.com/) - Vue.js framework
+- [Nuxt 4](https://nuxt.com/) - Vue-based full-stack framework
 - [Vue 3](https://vuejs.org/) - Progressive JavaScript framework
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Tailwind CSS 3](https://tailwindcss.com/) - Utility-first CSS framework
 - [UptimeRobot API](https://uptimerobot.com/api/) - Monitoring data source
-- [Iconify](https://iconify.design/) - Icon library
+- [Iconify 5](https://iconify.design/) - Icon library
 
 ## Screenshot
 
@@ -77,7 +77,7 @@ pnpm run build
 node .output/server/index.mjs
 ```
 
-Or deploy directly to Vercel, Netlify, or any platform supporting Nuxt 3.
+Or deploy directly to Vercel, Netlify, or any platform supporting Nuxt 4.
 
 ## Project Structure
 

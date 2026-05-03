@@ -1,6 +1,6 @@
 # Uptime Monitor
 
-一个美观、实时的服务状态监控面板，由 [UptimeRobot](https://uptimerobot.com/) 提供数据支持。基于 Nuxt 3 和 Tailwind CSS 构建。
+一个美观、实时的服务状态监控面板，由 [UptimeRobot](https://uptimerobot.com/) 提供数据支持。基于 Nuxt 4 和 Tailwind CSS 3 构建。
 
 [English](README.md)
 
@@ -18,11 +18,11 @@
 
 ## 技术栈
 
-- [Nuxt 3](https://nuxt.com/) - Vue.js 框架
+- [Nuxt 4](https://nuxt.com/) - 基于 Vue 的全栈框架
 - [Vue 3](https://vuejs.org/) - 渐进式 JavaScript 框架
-- [Tailwind CSS](https://tailwindcss.com/) - 原子化 CSS 框架
+- [Tailwind CSS 3](https://tailwindcss.com/) - 原子化 CSS 框架
 - [UptimeRobot API](https://uptimerobot.com/api/) - 监控数据源
-- [Iconify](https://iconify.design/) - 图标库
+- [Iconify 5](https://iconify.design/) - 图标库
 
 ## 截图
 
@@ -77,7 +77,7 @@ pnpm run build
 node .output/server/index.mjs
 ```
 
-也可以直接部署到 Vercel、Netlify 或任何支持 Nuxt 3 的平台。
+也可以直接部署到 Vercel、Netlify 或任何支持 Nuxt 4 的平台。
 
 ## 项目结构
 
